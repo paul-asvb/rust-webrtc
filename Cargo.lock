@@ -329,6 +329,7 @@ dependencies = [
  "env_logger",
  "log",
  "logs",
+ "rand",
  "serde_json",
  "signal",
  "tokio",

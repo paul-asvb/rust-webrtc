@@ -1,4 +1,5 @@
 use anyhow::Result;
+use rand::Rng;
 use std::sync::Arc;
 use tokio::time::Duration;
 use webrtc::api::interceptor_registry::register_default_interceptors;
@@ -12,24 +13,31 @@ use webrtc::peer_connection::configuration::RTCConfiguration;
 use webrtc::peer_connection::math_rand_alpha;
 use webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState;
 use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
+mod session;
+#[cfg(test)]
+mod tests;
+
+pub fn session_id() {
+    const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
+    const PASSWORD_LEN: usize = 6;
+    let mut rng = rand::thread_rng();
+
+    let password: String = (0..PASSWORD_LEN)
+        .map(|_| {
+            let idx = rng.gen_range(0..CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect();
+
+    println!("{:?}", password);
+}
 
 pub fn encode(b: &str) -> String {
-    //if COMPRESS {
-    //    b = zip(b)
-    //}
-
     base64::encode(b)
 }
 
-/// decode decodes the input from base64
-/// It can optionally unzip the input after decoding
 pub fn decode(s: &str) -> Result<String> {
     let b = base64::decode(s)?;
-
-    //if COMPRESS {
-    //    b = unzip(b)
-    //}
-
     let s = String::from_utf8(b)?;
     Ok(s)
 }
