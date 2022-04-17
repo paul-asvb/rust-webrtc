@@ -1,4 +1,7 @@
+use crate::session::start_session;
+
 #[tokio::test]
-async fn start_session() {
-    start_session();
+async fn test_session() {
+    let res = start_session().await;
+    assert!(res.is_ok());
 }

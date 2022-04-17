@@ -1,3 +1,5 @@
+# Dev 
+cargo test
 # Todo
 
 speedtest

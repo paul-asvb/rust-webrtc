@@ -9,7 +9,7 @@ use webrtc::interceptor::twcc::receiver::Receiver;
 use webrtc::peer_connection::configuration::RTCConfiguration;
 use webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState;
 
-async fn start_session() -> Result<()> {
+pub async fn start_session() -> Result<()> {
     // Create a MediaEngine object to configure the supported codec
     let mut m = MediaEngine::default();
     // Register default codecs
@@ -53,17 +53,17 @@ async fn start_session() -> Result<()> {
                 RTCPeerConnectionState::Unspecified => {
                     println!("RTCPeerConnectionState::Unspecified")
                 }
-                RTCPeerConnectionState::New => println!("RTCPeerConnectionState::Unspecified"),
+                RTCPeerConnectionState::New => println!("RTCPeerConnectionState::New"),
                 RTCPeerConnectionState::Connecting => {
-                    println!("RTCPeerConnectionState::Unspecified")
+                    println!("RTCPeerConnectionState::Connecting")
                 }
                 RTCPeerConnectionState::Connected => {
-                    println!("RTCPeerConnectionState::Unspecified")
+                    println!("RTCPeerConnectionState::Connected")
                 }
                 RTCPeerConnectionState::Disconnected => {
-                    println!("RTCPeerConnectionState::Unspecified")
+                    println!("RTCPeerConnectionState::Disconnected")
                 }
-                RTCPeerConnectionState::Failed => println!("RTCPeerConnectionState::Unspecified"),
+                RTCPeerConnectionState::Failed => println!("RTCPeerConnectionState::Failed"),
                 RTCPeerConnectionState::Closed => println!("RTCPeerConnectionState::Unspecified"),
             }
 
