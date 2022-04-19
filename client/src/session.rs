@@ -48,12 +48,9 @@ pub async fn start_session() -> Result<String> {
 
     let peer_connection = api.new_peer_connection(config).await?;
 
-    let options = Some(RTCOfferOptions {
-        voice_activity_detection: false,
-        ice_restart: true,
-    });
-
-    let offer = peer_connection.create_offer(options).await?;
+    let offer = peer_connection.create_offer(None).await?;
+    let s = serde_json::to_string(&offer).unwrap();
+    Ok(s)
 
     // Create a new RTCPeerConnection
     //let peer_connection = Arc::new(api.new_peer_connection(config).await?);
@@ -63,54 +60,54 @@ pub async fn start_session() -> Result<String> {
 
     // Set the handler for Peer connection state
     // This will notify you when the peer has connected/disconnected
-    peer_connection
-        .on_peer_connection_state_change(Box::new(move |s: RTCPeerConnectionState| {
-            match s {
-                RTCPeerConnectionState::Unspecified => {
-                    println!("RTCPeerConnectionState::Unspecified")
-                }
-                RTCPeerConnectionState::New => println!("RTCPeerConnectionState::New"),
-                RTCPeerConnectionState::Connecting => {
-                    println!("RTCPeerConnectionState::Connecting")
-                }
-                RTCPeerConnectionState::Connected => {
-                    println!("RTCPeerConnectionState::Connected")
-                }
-                RTCPeerConnectionState::Disconnected => {
-                    println!("RTCPeerConnectionState::Disconnected")
-                }
-                RTCPeerConnectionState::Failed => println!("RTCPeerConnectionState::Failed"),
-                RTCPeerConnectionState::Closed => println!("RTCPeerConnectionState::Unspecified"),
-            }
+    // peer_connection
+    //     .on_peer_connection_state_change(Box::new(move |s: RTCPeerConnectionState| {
+    //         match s {
+    //             RTCPeerConnectionState::Unspecified => {
+    //                 println!("RTCPeerConnectionState::Unspecified")
+    //             }
+    //             RTCPeerConnectionState::New => println!("RTCPeerConnectionState::New"),
+    //             RTCPeerConnectionState::Connecting => {
+    //                 println!("RTCPeerConnectionState::Connecting")
+    //             }
+    //             RTCPeerConnectionState::Connected => {
+    //                 println!("RTCPeerConnectionState::Connected")
+    //             }
+    //             RTCPeerConnectionState::Disconnected => {
+    //                 println!("RTCPeerConnectionState::Disconnected")
+    //             }
+    //             RTCPeerConnectionState::Failed => println!("RTCPeerConnectionState::Failed"),
+    //             RTCPeerConnectionState::Closed => println!("RTCPeerConnectionState::Unspecified"),
+    //         }
 
-            Box::pin(async {})
-        }))
-        .await;
+    //         Box::pin(async {})
+    //     }))
+    //     .await;
 
-    // Set the remote SessionDescription
-    peer_connection.set_remote_description(offer).await?;
+    // // Set the remote SessionDescription
+    // peer_connection.set_remote_description(offer).await?;
 
-    // Create an answer
-    let answer = peer_connection.create_answer(None).await?;
+    // // Create an answer
+    // let answer = peer_connection.create_answer(None).await?;
 
-    // Create channel that is blocked until ICE Gathering is complete
-    let mut gather_complete = peer_connection.gathering_complete_promise().await;
+    // // Create channel that is blocked until ICE Gathering is complete
+    // let mut gather_complete = peer_connection.gathering_complete_promise().await;
 
-    // Sets the LocalDescription, and starts our UDP listeners
-    peer_connection.set_local_description(answer).await?;
+    // // Sets the LocalDescription, and starts our UDP listeners
+    // peer_connection.set_local_description(answer).await?;
 
-    // Block until ICE Gathering is complete, disabling trickle ICE
-    // we do this because we only can exchange one signaling message
-    // in a production application you should exchange ICE Candidates via OnICECandidate
-    let _ = gather_complete.recv().await;
+    // // Block until ICE Gathering is complete, disabling trickle ICE
+    // // we do this because we only can exchange one signaling message
+    // // in a production application you should exchange ICE Candidates via OnICECandidate
+    // let _ = gather_complete.recv().await;
 
-    // Output the answer in base64 so we can paste it in browser
-    if let Some(local_desc) = peer_connection.local_description().await {
-        let json_str = serde_json::to_string(&local_desc)?;
-        println!("{:?}", base64::encode(json_str.clone()));
-        Ok(json_str)
-    } else {
-        println!("generate local_description failed!");
-        Ok(r#"generate local_description failed!"#.to_string())
-    }
+    // // Output the answer in base64 so we can paste it in browser
+    // if let Some(local_desc) = peer_connection.local_description().await {
+    //     let json_str = serde_json::to_string(&local_desc)?;
+    //     println!("{:?}", base64::encode(json_str.clone()));
+    //     Ok(json_str)
+    // } else {
+    //     println!("generate local_description failed!");
+    //     Ok(r#"generate local_description failed!"#.to_string())
+    // }
 }
