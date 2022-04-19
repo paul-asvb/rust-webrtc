@@ -11,11 +11,12 @@ use webrtc::interceptor::registry::Registry;
 use webrtc::interceptor::twcc::receiver::Receiver;
 use webrtc::peer_connection::configuration::RTCConfiguration;
 use webrtc::peer_connection::math_rand_alpha;
+use webrtc::peer_connection::offer_answer_options::RTCOfferOptions;
 use webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState;
 use webrtc::peer_connection::sdp::sdp_type::RTCSdpType;
 use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 
-pub async fn start_session() -> Result<()> {
+pub async fn start_session() -> Result<String> {
     // Create a MediaEngine object to configure the supported codec
     let mut m = MediaEngine::default();
     // Register default codecs
@@ -45,11 +46,20 @@ pub async fn start_session() -> Result<()> {
         ..Default::default()
     };
 
+    let peer_connection = api.new_peer_connection(config).await?;
+
+    let options = Some(RTCOfferOptions {
+        voice_activity_detection: false,
+        ice_restart: true,
+    });
+
+    let offer = peer_connection.create_offer(options).await?;
+
     // Create a new RTCPeerConnection
-    let peer_connection = Arc::new(api.new_peer_connection(config).await?);
+    //let peer_connection = Arc::new(api.new_peer_connection(config).await?);
 
     // Create a tokio datachannel for concurrency
-    let (done_tx, mut done_rx) = tokio::sync::mpsc::channel::<()>(1);
+    //let (done_tx, mut done_rx) = tokio::sync::mpsc::channel::<()>(1);
 
     // Set the handler for Peer connection state
     // This will notify you when the peer has connected/disconnected
@@ -77,52 +87,6 @@ pub async fn start_session() -> Result<()> {
         }))
         .await;
 
-    // Register data channel creation handling
-    peer_connection
-    .on_data_channel(Box::new(move |d: Arc<RTCDataChannel>| {
-        let d_label = d.label().to_owned();
-        let d_id = d.id();
-        println!("New DataChannel {} {}", d_label, d_id);
-
-        // Register channel opening handling
-        Box::pin(async move {
-            let d2 = Arc::clone(&d);
-            let d_label2 = d_label.clone();
-            let d_id2 = d_id;
-            d.on_open(Box::new(move || {
-                println!("Data channel '{}'-'{}' open. Random messages will now be sent to any connected DataChannels every 5 seconds", d_label2, d_id2);
-
-                Box::pin(async move {
-                    let mut result = Result::<usize>::Ok(0);
-                    while result.is_ok() {
-                        let timeout = tokio::time::sleep(Duration::from_secs(5));
-                        tokio::pin!(timeout);
-
-                        tokio::select! {
-                            _ = timeout.as_mut() =>{
-                                let message = math_rand_alpha(15);
-                                println!("Sending '{}'", message);
-                                result = d2.send_text(message).await.map_err(Into::into);
-                            }
-                        };
-                    }
-                })
-            })).await;
-
-            // Register text message handling
-            d.on_message(Box::new(move |msg: DataChannelMessage| {
-                let msg_str = String::from_utf8(msg.data.to_vec()).unwrap();
-                println!("Message from DataChannel '{}': '{}'", d_label, msg_str);
-                Box::pin(async {})
-            })).await;
-        })
-    }))
-    .await;
-
-    let pc = api.new_peer_connection(RTCConfiguration::default()).await?;
-
-    let offer = pc.create_offer(None).await?;
-
     // Set the remote SessionDescription
     peer_connection.set_remote_description(offer).await?;
 
@@ -143,10 +107,10 @@ pub async fn start_session() -> Result<()> {
     // Output the answer in base64 so we can paste it in browser
     if let Some(local_desc) = peer_connection.local_description().await {
         let json_str = serde_json::to_string(&local_desc)?;
-        println!("{:?}", base64::encode(json_str));
+        println!("{:?}", base64::encode(json_str.clone()));
+        Ok(json_str)
     } else {
         println!("generate local_description failed!");
+        Ok(r#"generate local_description failed!"#.to_string())
     }
-
-    Ok(())
 }
