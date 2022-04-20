@@ -1,20 +1,11 @@
 use anyhow::Result;
-use std::sync::Arc;
-use std::time::Duration;
 use webrtc::api::interceptor_registry::register_default_interceptors;
 use webrtc::api::media_engine::MediaEngine;
 use webrtc::api::APIBuilder;
-use webrtc::data_channel::data_channel_message::DataChannelMessage;
-use webrtc::data_channel::RTCDataChannel;
 use webrtc::ice_transport::ice_server::RTCIceServer;
 use webrtc::interceptor::registry::Registry;
-use webrtc::interceptor::twcc::receiver::Receiver;
 use webrtc::peer_connection::configuration::RTCConfiguration;
-use webrtc::peer_connection::math_rand_alpha;
-use webrtc::peer_connection::offer_answer_options::RTCOfferOptions;
 use webrtc::peer_connection::peer_connection_state::RTCPeerConnectionState;
-use webrtc::peer_connection::sdp::sdp_type::RTCSdpType;
-use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 
 pub async fn start_session() -> Result<String> {
     // Create a MediaEngine object to configure the supported codec
@@ -49,9 +40,8 @@ pub async fn start_session() -> Result<String> {
     let peer_connection = api.new_peer_connection(config).await?;
 
     let offer = peer_connection.create_offer(None).await?;
-    let s = serde_json::to_string(&offer).unwrap();
-    Ok(s)
-
+    //let s = serde_json::to_string(&offer).unwrap();
+    
     // Create a new RTCPeerConnection
     //let peer_connection = Arc::new(api.new_peer_connection(config).await?);
 
@@ -60,29 +50,29 @@ pub async fn start_session() -> Result<String> {
 
     // Set the handler for Peer connection state
     // This will notify you when the peer has connected/disconnected
-    // peer_connection
-    //     .on_peer_connection_state_change(Box::new(move |s: RTCPeerConnectionState| {
-    //         match s {
-    //             RTCPeerConnectionState::Unspecified => {
-    //                 println!("RTCPeerConnectionState::Unspecified")
-    //             }
-    //             RTCPeerConnectionState::New => println!("RTCPeerConnectionState::New"),
-    //             RTCPeerConnectionState::Connecting => {
-    //                 println!("RTCPeerConnectionState::Connecting")
-    //             }
-    //             RTCPeerConnectionState::Connected => {
-    //                 println!("RTCPeerConnectionState::Connected")
-    //             }
-    //             RTCPeerConnectionState::Disconnected => {
-    //                 println!("RTCPeerConnectionState::Disconnected")
-    //             }
-    //             RTCPeerConnectionState::Failed => println!("RTCPeerConnectionState::Failed"),
-    //             RTCPeerConnectionState::Closed => println!("RTCPeerConnectionState::Unspecified"),
-    //         }
+    peer_connection
+        .on_peer_connection_state_change(Box::new(move |s: RTCPeerConnectionState| {
+            match s {
+                RTCPeerConnectionState::Unspecified => {
+                    println!("RTCPeerConnectionState::Unspecified")
+                }
+                RTCPeerConnectionState::New => println!("RTCPeerConnectionState::New"),
+                RTCPeerConnectionState::Connecting => {
+                    println!("RTCPeerConnectionState::Connecting")
+                }
+                RTCPeerConnectionState::Connected => {
+                    println!("RTCPeerConnectionState::Connected")
+                }
+                RTCPeerConnectionState::Disconnected => {
+                    println!("RTCPeerConnectionState::Disconnected")
+                }
+                RTCPeerConnectionState::Failed => println!("RTCPeerConnectionState::Failed"),
+                RTCPeerConnectionState::Closed => println!("RTCPeerConnectionState::Unspecified"),
+            }
 
-    //         Box::pin(async {})
-    //     }))
-    //     .await;
+            Box::pin(async {})
+        }))
+        .await;
 
     // // Set the remote SessionDescription
     // peer_connection.set_remote_description(offer).await?;
@@ -110,4 +100,5 @@ pub async fn start_session() -> Result<String> {
     //     println!("generate local_description failed!");
     //     Ok(r#"generate local_description failed!"#.to_string())
     // }
+    Ok("dsfg".to_string())
 }

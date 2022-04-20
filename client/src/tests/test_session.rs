@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tokio::time::sleep;
 
-use crate::session::start_session;
+use bk::session::start_session;
 
 #[tokio::test]
 async fn test_session() {
